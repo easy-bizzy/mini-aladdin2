@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Простой CSS
+# CSS
 st.markdown("""
 <style>
     .main { background-color: #ffffff !important; }
@@ -23,7 +23,7 @@ st.markdown("""
         border-radius: 8px !important;
         padding: 15px !important;
     }
-    div[data-testid="stMetric"] p { color: #000000 !important; }
+    div[data-testid="stMetric"] p { color: #000000 !important; font-weight: bold; }
     div[data-testid="stMetric"] label { color: #333333 !important; }
     section[data-testid="stSidebar"] { background-color: #1e3a5f !important; }
     section[data-testid="stSidebar"] * { color: #ffffff !important; }
@@ -41,11 +41,8 @@ if 'positions' not in st.session_state:
         {'ticker': 'SU26254RMFS6', 'short_name': 'ОФЗ 26254', 'qty': 250, 'buy_price': 93.0, 'coupon_rate': 0.13, 'duration': 6.06}
     ]
 
-if 'last_update' not in st.session_state:
-    st.session_state.last_update = None
-
-# Функция получения цен (с кэшированием)
-@st.cache_data(ttl=300)  # Кэш на 5 минут
+# Функция получения цен с кэшированием
+@st.cache_data(ttl=300)
 def get_moex_prices():
     """Получить цены с MOEX"""
     prices = {}
@@ -105,13 +102,13 @@ with st.sidebar:
     
     page = st.radio(
         "Навигация",
-        [" Главная", "📊 Позиции", "🔥 Стресс-тесты", 
+        ["🏠 Главная", "📊 Позиции", "🔥 Стресс-тесты", 
          "🎯 Прогноз цели", "📈 Симуляция RGBI"],
         index=0
     )
     
     st.markdown("---")
-    st.caption(f" Обновлено: {datetime.now().strftime('%H:%M')}")
+    st.caption(f"🔄 Обновлено: {datetime.now().strftime('%H:%M')}")
     
     if st.button("🔄 Обновить цены"):
         st.cache_data.clear()
@@ -120,7 +117,7 @@ with st.sidebar:
 # ==================== ГЛАВНАЯ ====================
 
 if page == "🏠 Главная":
-    st.title(" Обзор портфеля")
+    st.title("💼 Обзор портфеля")
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -146,7 +143,7 @@ if page == "🏠 Главная":
         fig_pie = px.pie(metrics['details'], values='market_value', 
                         names='short_name', hole=0.4)
         fig_pie.update_layout(height=400)
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
     
     with col2:
         st.subheader("💹 P&L")
@@ -157,40 +154,49 @@ if page == "🏠 Главная":
             marker_color=colors
         ))
         fig_bar.update_layout(height=400, showlegend=False)
-        st.plotly_chart(fig_bar, use_container_width=True)
+        st.plotly_chart(fig_bar, width='stretch')
     
     st.markdown("---")
     st.subheader("🎯 Цель: 5 000 000 ₽")
     progress = min(metrics['total_value'] / 5_000_000, 1.0)
     st.progress(progress)
     st.caption(f"{metrics['total_value']:,.0f} ₽ ({progress*100:.1f}%)")
+    
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("💵 Купон/год", f"{metrics['annual_coupon']:,.0f} ₽")
+    with col2:
+        st.metric("💵 Купон/мес", f"{metrics['annual_coupon']/12:,.0f} ₽")
+    with col3:
+        st.metric("💵 Купон/день", f"{metrics['annual_coupon']/365:,.0f} ₽")
 
 # ==================== ПОЗИЦИИ ====================
 
 elif page == "📊 Позиции":
     st.title("💼 Управление позициями")
     
-    st.subheader("Текущие позиции")
+    st.subheader("📋 Текущие позиции")
     display_df = metrics['details'][['short_name', 'qty', 'buy_price', 
-                                     'current_price', 'market_value', 'pnl']].copy()
-    display_df.columns = ['Облигация', 'Кол-во', 'Покупка', 'Сейчас', 'Стоимость', 'P&L']
-    st.dataframe(display_df, use_container_width=True)
+                                     'current_price', 'market_value', 'pnl', 'pnl_pct']].copy()
+    display_df.columns = ['Облигация', 'Кол-во', 'Покупка %', 'Сейчас %', 'Стоимость ₽', 'P&L ₽', 'P&L %']
+    st.dataframe(display_df, width='stretch')
     
     st.markdown("---")
-    st.subheader("➕ Добавить позицию")
+    st.subheader("➕ Добавить новую позицию")
     
     col1, col2 = st.columns(2)
     with col1:
-        new_ticker = st.text_input("Тикер", "SU26230RMFS5")
-        new_name = st.text_input("Название", "ОФЗ 26230")
-        new_qty = st.number_input("Количество", min_value=1, value=10)
+        new_ticker = st.text_input("Тикер (например, SU26230RMFS5)", "SU26230RMFS5")
+        new_name = st.text_input("Название (например, ОФЗ 26230)", "ОФЗ 26230")
+        new_qty = st.number_input("Количество (шт)", min_value=1, value=10)
     
     with col2:
-        new_price = st.number_input("Цена покупки %", value=90.0)
-        new_coupon = st.number_input("Купон %", value=10.0)
-        new_duration = st.number_input("Дюрация", value=5.0)
+        new_price = st.number_input("Цена покупки (%)", value=90.0, step=0.1)
+        new_coupon = st.number_input("Купонная ставка (%)", value=10.0, step=0.1)
+        new_duration = st.number_input("Дюрация (лет)", value=5.0, step=0.1)
     
-    if st.button("Добавить"):
+    if st.button("✅ Добавить позицию"):
         st.session_state.positions.append({
             'ticker': new_ticker,
             'short_name': new_name,
@@ -201,19 +207,33 @@ elif page == "📊 Позиции":
             'current_price': float(new_price)
         })
         st.cache_data.clear()
-        st.success("✅ Добавлено!")
+        st.success(f"✅ Добавлена: {new_name}")
+        st.rerun()
+    
+    st.markdown("---")
+    st.subheader("🗑️ Удалить позицию")
+    
+    options = [f"{pos['short_name']} ({pos['qty']} шт)" for pos in st.session_state.positions]
+    position_to_delete = st.selectbox("Выберите позицию", options)
+    
+    if st.button("❌ Удалить"):
+        index = options.index(position_to_delete)
+        st.session_state.positions.pop(index)
+        st.cache_data.clear()
+        st.success("✅ Позиция удалена")
         st.rerun()
 
 # ==================== СТРЕСС-ТЕСТЫ ====================
 
-elif page == " Стресс-тесты":
-    st.title("🔥 Стресс-тесты")
+elif page == "🔥 Стресс-тесты":
+    st.title("🔥 Стресс-тестирование")
+    st.caption("Моделируйте реакцию портфеля на изменения рынка")
     
     col1, col2 = st.columns(2)
     with col1:
-        rate_shock = st.slider("Изменение ставки %", -5.0, 10.0, 0.0, 0.1)
+        rate_shock = st.slider("📈 Изменение ключевой ставки (%)", -5.0, 10.0, 0.0, 0.1)
     with col2:
-        fx_shock = st.slider("Ослабление рубля %", 0.0, 50.0, 0.0, 1.0)
+        fx_shock = st.slider("💱 Ослабление рубля (%)", 0.0, 50.0, 0.0, 1.0)
     
     duration = metrics['weighted_duration']
     current_value = metrics['total_value']
@@ -223,23 +243,78 @@ elif page == " Стресс-тесты":
         value_change -= current_value * (duration * fx_shock * 0.15 / 100)
     
     new_value = current_value + value_change
+    change_pct = (value_change / current_value) * 100
     
+    st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Текущая", f"{current_value:,.0f} ₽")
+        st.metric("💰 Текущая", f"{current_value:,.0f} ₽")
     with col2:
-        st.metric("Изменение", f"{value_change:+,.0f} ₽", 
-                 f"{(value_change/current_value)*100:+.2f}%")
+        st.metric("📊 Изменение", f"{value_change:+,.0f} ₽", f"{change_pct:+.2f}%")
     with col3:
-        st.metric("Новая", f"{new_value:,.0f} ₽")
+        st.metric("📉 Новая", f"{new_value:,.0f} ₽")
+    
+    st.markdown("---")
+    st.subheader("📈 Чувствительность к ставке")
+    
+    rate_range = np.linspace(-5, 10, 100)
+    losses = [current_value * (-duration * r / 100) for r in rate_range]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=rate_range, y=losses, mode='lines',
+        line=dict(color='rgb(52, 152, 219)', width=3),
+        fill='tozeroy',
+        fillcolor='rgba(52, 152, 219, 0.1)',
+        name='Изменение стоимости'
+    ))
+    fig.add_trace(go.Scatter(
+        x=[rate_shock], y=[value_change], mode='markers',
+        marker=dict(size=15, color='red', symbol='circle'),
+        name='Ваш сценарий'
+    ))
+    fig.add_hline(y=0, line_dash="dash", line_color="black")
+    fig.update_layout(
+        xaxis_title="Изменение ставки (%)",
+        yaxis_title="Изменение стоимости (₽)",
+        height=500, template='plotly_white'
+    )
+    st.plotly_chart(fig, width='stretch')
+    
+    st.markdown("---")
+    st.subheader("📋 Готовые сценарии")
+    
+    scenarios = [
+        ("🟢 Сильное снижение ставки", -3.0, 0),
+        ("🟢 Умеренное снижение", -1.5, 0),
+        ("⚪ Ставка без изменений", 0, 0),
+        ("🟡 Небольшой рост", 1.0, 0),
+        ("🟠 Значительный рост", 2.0, 0),
+        ("🔴 Кризис", 5.0, 20),
+    ]
+    
+    scenario_data = []
+    for name, rate, fx in scenarios:
+        change = current_value * (-duration * rate / 100)
+        if fx > 0:
+            change -= current_value * (duration * fx * 0.15 / 100)
+        scenario_data.append({
+            'Сценарий': name,
+            'Шок ставки': f"{rate:+.1f}%",
+            'Шок валюты': f"{fx:.0f}%",
+            'Изменение ₽': f"{change:+,.0f}",
+            'Новая стоимость ₽': f"{current_value + change:,.0f}"
+        })
+    
+    st.dataframe(pd.DataFrame(scenario_data), width='stretch', hide_index=True)
 
 # ==================== ПРОГНОЗ ====================
 
 elif page == "🎯 Прогноз цели":
-    st.title("🎯 Прогноз")
+    st.title("🎯 Прогноз достижения цели")
     
-    target = st.number_input("Цель ₽", value=5_000_000, step=100_000)
-    monthly = st.number_input("Вложения в месяц ₽", value=100_000, step=10_000)
+    target = st.number_input("Цель (₽)", value=5_000_000, step=100_000)
+    monthly = st.number_input("Ежемесячные вложения (₽)", value=100_000, step=10_000)
     
     forecasts = []
     for pos in st.session_state.positions:
@@ -247,41 +322,107 @@ elif page == "🎯 Прогноз цели":
         coupon = pos['coupon_rate']
         
         months = 0
+        total_coupons = 0
         while value < target and months < 600:
             months += 1
             value += monthly
             if months % 6 == 0:
-                value += value * coupon / 2
+                coupon_income = value * coupon / 2
+                value += coupon_income
+                total_coupons += coupon_income
         
         forecasts.append({
             'Облигация': pos['short_name'],
-            'Лет': months / 12
+            'Лет до цели': months / 12,
+            'Купон %': f"{coupon*100:.2f}%",
+            'Реинвест. купоны ₽': f"{total_coupons:,.0f}"
         })
     
-    df_forecast = pd.DataFrame(forecasts).sort_values('Лет')
-    st.dataframe(df_forecast, use_container_width=True)
+    df_forecast = pd.DataFrame(forecasts).sort_values('Лет до цели')
+    
+    st.markdown("---")
+    st.subheader("⏱️ Время достижения цели по каждой облигации")
+    
+    fig = go.Figure(go.Bar(
+        x=df_forecast['Облигация'],
+        y=df_forecast['Лет до цели'],
+        marker_color=px.colors.sequential.Viridis[:len(df_forecast)],
+        text=df_forecast['Лет до цели'].apply(lambda x: f"{x:.1f} лет"),
+        textposition='auto'
+    ))
+    fig.update_layout(height=400, template='plotly_white', yaxis_title="Лет")
+    st.plotly_chart(fig, width='stretch')
+    
+    st.dataframe(df_forecast, width='stretch', hide_index=True)
+    
+    best = df_forecast.iloc[0]
+    st.success(f"🏆 **Лучший выбор:** {best['Облигация']} — достигнете цели за {best['Лет до цели']:.1f} лет")
 
 # ==================== RGBI ====================
 
 elif page == "📈 Симуляция RGBI":
-    st.title("📈 RGBI vs ОФЗ")
+    st.title("📈 Сравнение: RGBI vs Ваш портфель")
     
-    months = st.slider("Месяцев", 3, 60, 12)
+    months = st.slider("Период симуляции (месяцев)", 3, 60, 12)
     
     np.random.seed(42)
     current = metrics['total_value']
-    values = [current]
+    daily_values = []
     
     for day in range(months * 30):
         ret = np.random.normal(0.12/252, 0.08/np.sqrt(252))
         current *= (1 + ret)
         if day % 30 == 0 and day > 0:
             current += current * 0.10 / 12
-        values.append(current)
+        daily_values.append({
+            'date': datetime.now() + timedelta(days=day),
+            'value': current
+        })
     
-    st.metric("RGBI финал", f"{values[-1]:,.0f} ₽", 
-             f"{(values[-1]/metrics['total_value']-1)*100:+.2f}%")
+    rgbi_final = current
+    rgbi_return = (rgbi_final - metrics['total_value']) / metrics['total_value'] * 100
     
-    fig = go.Figure(go.Scatter(y=values, mode='lines'))
-    fig.update_layout(height=400)
-    st.plotly_chart(fig, use_container_width=True)
+    ofz_value = metrics['total_value']
+    monthly_growth = (metrics['annual_coupon'] / metrics['total_value']) / 12
+    for month in range(months):
+        ofz_value *= (1 + monthly_growth)
+        ofz_value += 100_000
+    
+    ofz_return = (ofz_value - metrics['total_value']) / metrics['total_value'] * 100
+    difference = rgbi_final - ofz_value
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("📈 RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
+    with col2:
+        st.metric("💼 ОФЗ", f"{ofz_value:,.0f} ₽", f"{ofz_return:+.2f}%")
+    with col3:
+        label = "Перезаработок" if difference > 0 else "Недозаработок"
+        st.metric("🆚 Разница", f"{difference:+,.0f} ₽", label)
+    
+    st.markdown("---")
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=[d['date'] for d in daily_values],
+        y=[d['value'] for d in daily_values],
+        mode='lines',
+        name='RGBI',
+        line=dict(color='rgb(52, 152, 219)', width=2)
+    ))
+    
+    ofz_dates = [datetime.now() + timedelta(days=m*30) for m in range(months)]
+    fig.add_trace(go.Scatter(
+        x=ofz_dates,
+        y=[metrics['total_value'] * (1 + monthly_growth)**m + 100_000 * m for m in range(months)],
+        mode='lines+markers',
+        name='ОФЗ',
+        line=dict(color='rgb(46, 204, 113)', width=2)
+    ))
+    
+    fig.update_layout(
+        height=500, template='plotly_white',
+        yaxis_title="Стоимость (₽)",
+        hovermode='x unified'
+    )
+    st.plotly_chart(fig, width='stretch')
