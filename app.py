@@ -16,31 +16,59 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 🎨 ИСПРАВЛЕННЫЙ CSS — теперь цифры будут видны!
+# CSS с универсальными цветами для любого фона
 st.markdown("""
 <style>
-    /* Принудительно тёмный текст на карточках */
+    /* Карточки метрик */
     div[data-testid="stMetric"] {
-        background-color: #ffffff !important;
-        border: 1px solid #e0e0e0 !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        border: 2px solid #e0e0e0 !important;
         border-radius: 12px !important;
         padding: 20px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
     
-    div[data-testid="stMetric"] label {
-        color: #666666 !important;
-        font-size: 14px !important;
-    }
-    
+    /* Текст метрик - тёмно-синий с белой обводкой */
     div[data-testid="stMetric"] p {
-        color: #000000 !important;
+        color: #0d1b2a !important;
         font-size: 28px !important;
         font-weight: bold !important;
+        text-shadow: 
+            1px 1px 0 #ffffff,
+            -1px -1px 0 #ffffff,
+            1px -1px 0 #ffffff,
+            -1px 1px 0 #ffffff,
+            0 1px 0 #ffffff,
+            0 -1px 0 #ffffff,
+            1px 0 0 #ffffff,
+            -1px 0 0 #ffffff !important;
     }
     
+    /* Подписи метрик */
+    div[data-testid="stMetric"] label,
+    div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {
+        color: #415a77 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Дельта */
     div[data-testid="stMetric"] div[data-testid="stMetricDelta"] {
         font-size: 16px !important;
+        font-weight: 600 !important;
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Заголовки */
+    h1, h2, h3, h4 {
+        color: #0d1b2a !important;
+        text-shadow: 1px 1px 2px rgba(255,255,255,0.5) !important;
+    }
+    
+    /* Обычный текст */
+    p, span, div {
+        color: #1a1a2e !important;
     }
     
     /* Сайдбар */
@@ -50,30 +78,21 @@ st.markdown("""
     
     section[data-testid="stSidebar"] * {
         color: #ffffff !important;
-    }
-    
-    /* Заголовки */
-    h1, h2, h3 {
-        color: #000000 !important;
+        text-shadow: none !important;
     }
     
     /* Таблицы */
-    .stDataFrame {
+    .stDataFrame, div[data-testid="stDataFrame"] {
         background-color: #ffffff !important;
     }
     
-    /* Основной фон */
-    .main .block-container {
-        background-color: #f5f7fa !important;
-    }
-    
-    /* Скрываем футер Streamlit */
+    /* Скрыть футер */
     footer {visibility: hidden;}
     
     /* Мобильная адаптация */
     @media (max-width: 768px) {
         div[data-testid="stMetric"] p {
-            font-size: 24px !important;
+            font-size: 22px !important;
         }
     }
 </style>
@@ -166,8 +185,8 @@ with st.sidebar:
     
     page = st.radio(
         "🎯 Навигация",
-        ["🏠 Главная", "📊 Позиции", " Стресс-тесты", 
-         "🎯 Прогноз цели", " Симуляция RGBI", "📱 О системе"],
+        ["🏠 Главная", "📊 Позиции", "🔥 Стресс-тесты", 
+         " Прогноз цели", "📈 Симуляция RGBI", "📱 О системе"],
         index=0
     )
     
@@ -183,11 +202,10 @@ with st.sidebar:
 
 # ==================== ГЛАВНАЯ ====================
 
-if page == " Главная":
+if page == "🏠 Главная":
     st.title("💼 Обзор портфеля")
     st.caption(f"Последнее обновление: {aladdin.last_update.strftime('%d.%m.%Y %H:%M:%S')}")
     
-    # Ключевые метрики
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -206,7 +224,7 @@ if page == " Главная":
     
     with col3:
         st.metric(
-            label="️ Дюрация",
+            label="⏱️ Дюрация",
             value=f"{metrics['weighted_duration']:.2f} лет",
             delta="средневзвеш."
         )
@@ -220,7 +238,6 @@ if page == " Главная":
     
     st.markdown("---")
     
-    # Графики
     col1, col2 = st.columns(2)
     
     with col1:
@@ -255,20 +272,18 @@ if page == " Главная":
         fig_bar.add_hline(y=0, line_dash="dash")
         st.plotly_chart(fig_bar, use_container_width=True)
     
-    # Прогресс к цели
     st.markdown("---")
     st.subheader("🎯 Прогресс к цели 5 000 000 ₽")
     progress = metrics['total_value'] / 5_000_000
     st.progress(min(progress, 1.0))
     st.caption(f"Достигнуто: {metrics['total_value']:,.0f} ₽ из 5 000 000 ₽ ({progress*100:.1f}%)")
     
-    # Купонный доход
     st.markdown("---")
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("💵 Купон в год", f"{metrics['annual_coupon']:,.0f} ₽")
     with col2:
-        st.metric(" Купон в месяц", f"{metrics['annual_coupon']/12:,.0f} ₽")
+        st.metric("💵 Купон в месяц", f"{metrics['annual_coupon']/12:,.0f} ₽")
     with col3:
         st.metric("💵 Купон в день", f"{metrics['annual_coupon']/365:,.0f} ₽")
 
@@ -381,7 +396,7 @@ elif page == "🔥 Стресс-тесты":
     st.subheader("📋 Готовые сценарии")
     
     scenarios = [
-        (" Сильное снижение ставки", -3.0, 0),
+        ("🟢 Сильное снижение ставки", -3.0, 0),
         ("🟢 Умеренное снижение", -1.5, 0),
         ("⚪ Ставка без изменений", 0, 0),
         ("🟡 Небольшой рост", 1.0, 0),
@@ -461,7 +476,7 @@ elif page == "🎯 Прогноз цели":
 # ==================== СИМУЛЯЦИЯ RGBI ====================
 
 elif page == "📈 Симуляция RGBI":
-    st.title(" Сравнение: RGBI vs Ваш портфель")
+    st.title("📊 Сравнение: RGBI vs Ваш портфель")
     
     months = st.slider("Период симуляции (месяцев)", 3, 60, 12)
     
@@ -493,7 +508,7 @@ elif page == "📈 Симуляция RGBI":
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("📈 RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
+        st.metric(" RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
     with col2:
         st.metric("💼 ОФЗ", f"{ofz_value:,.0f} ₽", f"{ofz_return:+.2f}%")
     with col3:
@@ -531,19 +546,19 @@ elif page == "📈 Симуляция RGBI":
 # ==================== О СИСТЕМЕ ====================
 
 elif page == "📱 О системе":
-    st.title(" О системе Mini-Aladdin")
+    st.title("📱 О системе Mini-Aladdin")
     
     st.markdown("""
-    ### 🎯 Что это?
+    ###  Что это?
     **Mini-Aladdin** — это ваш персональный аналог профессиональной системы управления рисками 
     от BlackRock, адаптированный для Московской биржи.
     
     ### 💡 Возможности:
     - 📊 **Мониторинг портфеля** в реальном времени
     - 🔥 **Стресс-тесты** с интерактивными сценариями
-    - 🎯 **Прогноз достижения целей** с реинвестированием
+    -  **Прогноз достижения целей** с реинвестированием
     - 📈 **Сравнение с индексами** (RGBI)
-    -  **DV01** — точный расчёт риска в рублях
+    - 🎯 **DV01** — точный расчёт риска в рублях
     
     ### 📱 Как установить на телефон:
     
