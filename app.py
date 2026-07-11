@@ -16,33 +16,71 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Кастомный CSS для красоты
+# 🎨 ИСПРАВЛЕННЫЙ CSS — теперь цифры будут видны!
 st.markdown("""
 <style>
-    .main {
-        background-color: #f5f7fa;
+    /* Принудительно тёмный текст на карточках */
+    div[data-testid="stMetric"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
     }
-    .stMetric {
-        background-color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    
+    div[data-testid="stMetric"] label {
+        color: #666666 !important;
+        font-size: 14px !important;
     }
-    .big-font {
-        font-size:30px !important;
-        font-weight: bold;
+    
+    div[data-testid="stMetric"] p {
+        color: #000000 !important;
+        font-size: 28px !important;
+        font-weight: bold !important;
     }
-    div[data-testid="stSidebar"] {
-        background-color: #1e3a5f;
+    
+    div[data-testid="stMetric"] div[data-testid="stMetricDelta"] {
+        font-size: 16px !important;
     }
-    div[data-testid="stSidebar"] * {
-        color: white !important;
+    
+    /* Сайдбар */
+    section[data-testid="stSidebar"] {
+        background-color: #1e3a5f !important;
+    }
+    
+    section[data-testid="stSidebar"] * {
+        color: #ffffff !important;
+    }
+    
+    /* Заголовки */
+    h1, h2, h3 {
+        color: #000000 !important;
+    }
+    
+    /* Таблицы */
+    .stDataFrame {
+        background-color: #ffffff !important;
+    }
+    
+    /* Основной фон */
+    .main .block-container {
+        background-color: #f5f7fa !important;
+    }
+    
+    /* Скрываем футер Streamlit */
+    footer {visibility: hidden;}
+    
+    /* Мобильная адаптация */
+    @media (max-width: 768px) {
+        div[data-testid="stMetric"] p {
+            font-size: 24px !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
 
 
-# ==================== КЛАССЫ (такие же как раньше) ====================
+# ==================== КЛАССЫ ====================
 
 class MOEXData:
     BASE_URL = "https://iss.moex.com/iss"
@@ -116,7 +154,6 @@ def get_aladdin():
     aladdin.update_prices()
     return aladdin
 
-
 aladdin = get_aladdin()
 metrics = aladdin.calculate_metrics()
 
@@ -124,14 +161,13 @@ metrics = aladdin.calculate_metrics()
 # ==================== САЙДБАР ====================
 
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/chart.png", width=80)
     st.title("📊 Mini-Aladdin")
     st.markdown("---")
     
     page = st.radio(
         "🎯 Навигация",
-        ["🏠 Главная", "📊 Позиции", "🔥 Стресс-тесты", 
-         "🎯 Прогноз цели", "📈 Симуляция RGBI", "📱 О системе"],
+        ["🏠 Главная", "📊 Позиции", " Стресс-тесты", 
+         "🎯 Прогноз цели", " Симуляция RGBI", "📱 О системе"],
         index=0
     )
     
@@ -145,9 +181,9 @@ with st.sidebar:
         st.rerun()
 
 
-# ==================== ГЛАВНАЯ СТРАНИЦА ====================
+# ==================== ГЛАВНАЯ ====================
 
-if page == "🏠 Главная":
+if page == " Главная":
     st.title("💼 Обзор портфеля")
     st.caption(f"Последнее обновление: {aladdin.last_update.strftime('%d.%m.%Y %H:%M:%S')}")
     
@@ -170,7 +206,7 @@ if page == "🏠 Главная":
     
     with col3:
         st.metric(
-            label="⏱️ Дюрация",
+            label="️ Дюрация",
             value=f"{metrics['weighted_duration']:.2f} лет",
             delta="средневзвеш."
         )
@@ -197,7 +233,7 @@ if page == "🏠 Главная":
             color_discrete_sequence=px.colors.qualitative.Set3
         )
         fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-        fig_pie.update_layout(height=400)
+        fig_pie.update_layout(height=400, template='plotly_white')
         st.plotly_chart(fig_pie, use_container_width=True)
     
     with col2:
@@ -232,12 +268,12 @@ if page == "🏠 Главная":
     with col1:
         st.metric("💵 Купон в год", f"{metrics['annual_coupon']:,.0f} ₽")
     with col2:
-        st.metric("💵 Купон в месяц", f"{metrics['annual_coupon']/12:,.0f} ₽")
+        st.metric(" Купон в месяц", f"{metrics['annual_coupon']/12:,.0f} ₽")
     with col3:
         st.metric("💵 Купон в день", f"{metrics['annual_coupon']/365:,.0f} ₽")
 
 
-# ==================== СТРАНИЦА ПОЗИЦИЙ ====================
+# ==================== ПОЗИЦИИ ====================
 
 elif page == "📊 Позиции":
     st.title("💼 Детали по позициям")
@@ -247,8 +283,7 @@ elif page == "📊 Позиции":
     df.columns = ['Облигация', 'Кол-во', 'Покупка %', 'Сейчас %', 
                   'Стоимость ₽', 'P&L ₽', 'P&L %', 'Дюрация', 'Купон %']
     
-    # Форматирование
-    styled_df = df.style.format({
+    st.dataframe(df.style.format({
         'Покупка %': '{:.2f}',
         'Сейчас %': '{:.2f}',
         'Стоимость ₽': '{:,.0f}',
@@ -256,11 +291,8 @@ elif page == "📊 Позиции":
         'P&L %': '{:+.2f}%',
         'Дюрация': '{:.2f}',
         'Купон %': '{:.2f}%'
-    })
+    }), use_container_width=True, height=400)
     
-    st.dataframe(styled_df, use_container_width=True, height=400)
-    
-    # График дюрации
     st.markdown("---")
     st.subheader("⏱️ Дюрация по позициям")
     fig_dur = go.Figure(go.Bar(
@@ -274,34 +306,26 @@ elif page == "📊 Позиции":
     st.plotly_chart(fig_dur, use_container_width=True)
 
 
-# ==================== СТРАНИЦА СТРЕСС-ТЕСТОВ ====================
+# ==================== СТРЕСС-ТЕСТЫ ====================
 
 elif page == "🔥 Стресс-тесты":
     st.title("🔥 Стресс-тестирование")
     st.caption("Моделируйте реакцию портфеля на изменения рынка")
     
-    # Интерактивные ползунки
     col1, col2 = st.columns(2)
     with col1:
         rate_shock = st.slider(
             "📈 Изменение ключевой ставки",
-            min_value=-5.0,
-            max_value=10.0,
-            value=0.0,
-            step=0.1,
+            min_value=-5.0, max_value=10.0, value=0.0, step=0.1,
             format="%.1f%%"
         )
     with col2:
         fx_shock = st.slider(
             "💱 Ослабление рубля",
-            min_value=0.0,
-            max_value=50.0,
-            value=0.0,
-            step=1.0,
+            min_value=0.0, max_value=50.0, value=0.0, step=1.0,
             format="%.0f%%"
         )
     
-    # Расчёт
     current_value = metrics['total_value']
     duration = metrics['weighted_duration']
     
@@ -316,20 +340,16 @@ elif page == "🔥 Стресс-тесты":
     new_value = current_value + value_change
     change_pct = (value_change / current_value) * 100
     
-    # Результат
     st.markdown("---")
     col1, col2, col3 = st.columns(3)
     
     with col1:
         st.metric("💰 Текущая стоимость", f"{current_value:,.0f} ₽")
     with col2:
-        delta_color = "normal" if value_change >= 0 else "inverse"
-        st.metric("📊 Изменение", f"{value_change:+,.0f} ₽", 
-                 delta=f"{change_pct:+.2f}%", delta_color=delta_color)
+        st.metric("📊 Изменение", f"{value_change:+,.0f} ₽", delta=f"{change_pct:+.2f}%")
     with col3:
         st.metric("📉 Новая стоимость", f"{new_value:,.0f} ₽")
     
-    # График чувствительности
     st.markdown("---")
     st.subheader("📈 Чувствительность к ставке")
     
@@ -338,39 +358,30 @@ elif page == "🔥 Стресс-тесты":
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=rate_range,
-        y=losses,
-        mode='lines',
+        x=rate_range, y=losses, mode='lines',
         line=dict(color='rgb(52, 152, 219)', width=3),
         fill='tozeroy',
         fillcolor='rgba(52, 152, 219, 0.1)',
         name='Изменение стоимости'
     ))
-    
-    # Текущая точка
     fig.add_trace(go.Scatter(
-        x=[rate_shock],
-        y=[value_change],
-        mode='markers',
+        x=[rate_shock], y=[value_change], mode='markers',
         marker=dict(size=15, color='red', symbol='circle'),
         name='Ваш сценарий'
     ))
-    
     fig.add_hline(y=0, line_dash="dash", line_color="black")
     fig.update_layout(
         xaxis_title="Изменение ключевой ставки (%)",
         yaxis_title="Изменение стоимости (₽)",
-        height=500,
-        template='plotly_white'
+        height=500, template='plotly_white'
     )
     st.plotly_chart(fig, use_container_width=True)
     
-    # Таблица сценариев
     st.markdown("---")
     st.subheader("📋 Готовые сценарии")
     
     scenarios = [
-        ("🟢 Сильное снижение ставки", -3.0, 0),
+        (" Сильное снижение ставки", -3.0, 0),
         ("🟢 Умеренное снижение", -1.5, 0),
         ("⚪ Ставка без изменений", 0, 0),
         ("🟡 Небольшой рост", 1.0, 0),
@@ -402,7 +413,6 @@ elif page == "🎯 Прогноз цели":
     target = st.number_input("Цель (₽)", value=5_000_000, step=100_000, format="%d")
     monthly = st.number_input("Ежемесячные вложения (₽)", value=100_000, step=10_000, format="%d")
     
-    # Расчёт для каждой облигации
     forecasts = []
     for pos in aladdin.positions:
         current_value = pos['qty'] * pos['current_price'] * 10
@@ -444,7 +454,6 @@ elif page == "🎯 Прогноз цели":
     
     st.dataframe(df_forecast, use_container_width=True, hide_index=True)
     
-    # Лучшая облигация
     best = df_forecast.iloc[0]
     st.success(f"🏆 **Лучший выбор:** {best['Облигация']} — достигнете цели за {best['Лет до цели']:.1f} лет")
 
@@ -452,11 +461,10 @@ elif page == "🎯 Прогноз цели":
 # ==================== СИМУЛЯЦИЯ RGBI ====================
 
 elif page == "📈 Симуляция RGBI":
-    st.title("📊 Сравнение: RGBI vs Ваш портфель")
+    st.title(" Сравнение: RGBI vs Ваш портфель")
     
     months = st.slider("Период симуляции (месяцев)", 3, 60, 12)
     
-    # Симуляция RGBI
     np.random.seed(42)
     current_value = metrics['total_value']
     daily_values = []
@@ -474,7 +482,6 @@ elif page == "📈 Симуляция RGBI":
     rgbi_final = current_value
     rgbi_return = (rgbi_final - metrics['total_value']) / metrics['total_value'] * 100
     
-    # Прогноз ОФЗ
     ofz_value = metrics['total_value']
     monthly_growth = (metrics['annual_coupon'] / metrics['total_value']) / 12
     for month in range(months):
@@ -484,7 +491,6 @@ elif page == "📈 Симуляция RGBI":
     ofz_return = (ofz_value - metrics['total_value']) / metrics['total_value'] * 100
     difference = rgbi_final - ofz_value
     
-    # Результаты
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("📈 RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
@@ -492,9 +498,8 @@ elif page == "📈 Симуляция RGBI":
         st.metric("💼 ОФЗ", f"{ofz_value:,.0f} ₽", f"{ofz_return:+.2f}%")
     with col3:
         label = "Перезаработок" if difference > 0 else "Недозаработок"
-        st.metric(f"🆚 Разница", f"{difference:+,.0f} ₽", label)
+        st.metric("🆚 Разница", f"{difference:+,.0f} ₽", label)
     
-    # График
     st.markdown("---")
     fig = go.Figure()
     
@@ -506,7 +511,6 @@ elif page == "📈 Симуляция RGBI":
         line=dict(color='rgb(52, 152, 219)', width=2)
     ))
     
-    # ОФЗ как линия
     ofz_dates = [datetime.now() + timedelta(days=m*30) for m in range(months)]
     fig.add_trace(go.Scatter(
         x=ofz_dates,
@@ -517,8 +521,7 @@ elif page == "📈 Симуляция RGBI":
     ))
     
     fig.update_layout(
-        height=500,
-        template='plotly_white',
+        height=500, template='plotly_white',
         yaxis_title="Стоимость (₽)",
         hovermode='x unified'
     )
@@ -528,7 +531,7 @@ elif page == "📈 Симуляция RGBI":
 # ==================== О СИСТЕМЕ ====================
 
 elif page == "📱 О системе":
-    st.title("📱 О системе Mini-Aladdin")
+    st.title(" О системе Mini-Aladdin")
     
     st.markdown("""
     ### 🎯 Что это?
@@ -540,7 +543,7 @@ elif page == "📱 О системе":
     - 🔥 **Стресс-тесты** с интерактивными сценариями
     - 🎯 **Прогноз достижения целей** с реинвестированием
     - 📈 **Сравнение с индексами** (RGBI)
-    - 🎯 **DV01** — точный расчёт риска в рублях
+    -  **DV01** — точный расчёт риска в рублях
     
     ### 📱 Как установить на телефон:
     
@@ -560,7 +563,6 @@ elif page == "📱 О системе":
     - Python + Streamlit
     - Plotly (интерактивные графики)
     - MOEX ISS API (данные с Московской биржи)
-    - Google Sheets API (синхронизация)
     """)
     
     st.markdown("---")
