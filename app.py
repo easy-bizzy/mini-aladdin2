@@ -16,83 +16,173 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS с универсальными цветами для любого фона
+# CSS с явными фонами и контрастными цветами
 st.markdown("""
 <style>
-    /* Карточки метрик */
+    /* Основной фон приложения - светлый */
+    .main .block-container {
+        background-color: #f8f9fa !important;
+        padding: 2rem 1rem !important;
+    }
+    
+    /* Карточки метрик - белый фон, тёмный текст */
     div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.95) !important;
+        background-color: #ffffff !important;
         border: 2px solid #e0e0e0 !important;
         border-radius: 12px !important;
         padding: 20px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
     
-    /* Текст метрик - тёмно-синий с белой обводкой */
     div[data-testid="stMetric"] p {
-        color: #0d1b2a !important;
+        color: #1a1a2e !important;
         font-size: 28px !important;
         font-weight: bold !important;
-        text-shadow: 
-            1px 1px 0 #ffffff,
-            -1px -1px 0 #ffffff,
-            1px -1px 0 #ffffff,
-            -1px 1px 0 #ffffff,
-            0 1px 0 #ffffff,
-            0 -1px 0 #ffffff,
-            1px 0 0 #ffffff,
-            -1px 0 0 #ffffff !important;
     }
     
-    /* Подписи метрик */
     div[data-testid="stMetric"] label,
     div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {
-        color: #415a77 !important;
+        color: #4a4a6a !important;
         font-size: 14px !important;
         font-weight: 600 !important;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
     }
     
-    /* Дельта */
     div[data-testid="stMetric"] div[data-testid="stMetricDelta"] {
         font-size: 16px !important;
         font-weight: 600 !important;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
     }
     
-    /* Заголовки */
-    h1, h2, h3, h4 {
-        color: #0d1b2a !important;
-        text-shadow: 1px 1px 2px rgba(255,255,255,0.5) !important;
+    /* Заголовки - тёмный цвет */
+    h1 {
+        color: #1a1a2e !important;
+        font-size: 32px !important;
+    }
+    
+    h2, h3 {
+        color: #2a2a4e !important;
     }
     
     /* Обычный текст */
-    p, span, div {
+    .stMarkdown p, .stMarkdown li {
         color: #1a1a2e !important;
+        font-size: 16px !important;
     }
     
-    /* Сайдбар */
+    /* Подписи (caption) */
+    .stCaption {
+        color: #6a6a8a !important;
+    }
+    
+    /* Сайдбар - тёмный фон, светлый текст */
     section[data-testid="stSidebar"] {
         background-color: #1e3a5f !important;
     }
     
-    section[data-testid="stSidebar"] * {
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
         color: #ffffff !important;
-        text-shadow: none !important;
+    }
+    
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] span {
+        color: #ffffff !important;
+    }
+    
+    section[data-testid="stSidebar"] .stRadio label {
+        color: #ffffff !important;
+    }
+    
+    /* Ползунки (sliders) */
+    .stSlider label {
+        color: #1a1a2e !important;
+        font-weight: 600 !important;
+    }
+    
+    .stSlider div[data-baseweb="slider"] {
+        background-color: #e0e0e0 !important;
+    }
+    
+    /* Поля ввода (number_input) */
+    .stNumberInput label {
+        color: #1a1a2e !important;
+        font-weight: 600 !important;
+    }
+    
+    .stNumberInput input {
+        background-color: #ffffff !important;
+        color: #1a1a2e !important;
+        border: 2px solid #d0d0d0 !important;
+    }
+    
+    /* Кнопки */
+    .stButton button {
+        background-color: #4a90e2 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 10px 20px !important;
+        font-weight: 600 !important;
+    }
+    
+    .stButton button:hover {
+        background-color: #357abd !important;
     }
     
     /* Таблицы */
     .stDataFrame, div[data-testid="stDataFrame"] {
         background-color: #ffffff !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
     }
     
-    /* Скрыть футер */
+    .stDataFrame table, div[data-testid="stDataFrame"] table {
+        color: #1a1a2e !important;
+    }
+    
+    .stDataFrame th, div[data-testid="stDataFrame"] th {
+        background-color: #f0f0f0 !important;
+        color: #1a1a2e !important;
+    }
+    
+    .stDataFrame td, div[data-testid="stDataFrame"] td {
+        color: #1a1a2e !important;
+    }
+    
+    /* Success/error/info блоки */
+    .stSuccess {
+        background-color: #d4edda !important;
+        color: #155724 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+    
+    .stError {
+        background-color: #f8d7da !important;
+        color: #721c24 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+    
+    .stInfo {
+        background-color: #d1ecf1 !important;
+        color: #0c5460 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+    
+    /* Скрыть футер Streamlit */
     footer {visibility: hidden;}
     
     /* Мобильная адаптация */
     @media (max-width: 768px) {
         div[data-testid="stMetric"] p {
             font-size: 22px !important;
+        }
+        
+        h1 {
+            font-size: 24px !important;
         }
     }
 </style>
@@ -186,7 +276,7 @@ with st.sidebar:
     page = st.radio(
         "🎯 Навигация",
         ["🏠 Главная", "📊 Позиции", "🔥 Стресс-тесты", 
-         " Прогноз цели", "📈 Симуляция RGBI", "📱 О системе"],
+         "🎯 Прогноз цели", "📈 Симуляция RGBI", "📱 О системе"],
         index=0
     )
     
@@ -202,7 +292,7 @@ with st.sidebar:
 
 # ==================== ГЛАВНАЯ ====================
 
-if page == "🏠 Главная":
+if page == " Главная":
     st.title("💼 Обзор портфеля")
     st.caption(f"Последнее обновление: {aladdin.last_update.strftime('%d.%m.%Y %H:%M:%S')}")
     
@@ -273,7 +363,7 @@ if page == "🏠 Главная":
         st.plotly_chart(fig_bar, use_container_width=True)
     
     st.markdown("---")
-    st.subheader("🎯 Прогресс к цели 5 000 000 ₽")
+    st.subheader(" Прогресс к цели 5 000 000 ₽")
     progress = metrics['total_value'] / 5_000_000
     st.progress(min(progress, 1.0))
     st.caption(f"Достигнуто: {metrics['total_value']:,.0f} ₽ из 5 000 000 ₽ ({progress*100:.1f}%)")
@@ -330,13 +420,13 @@ elif page == "🔥 Стресс-тесты":
     col1, col2 = st.columns(2)
     with col1:
         rate_shock = st.slider(
-            "📈 Изменение ключевой ставки",
+            "📈 Изменение ключевой ставки (%)",
             min_value=-5.0, max_value=10.0, value=0.0, step=0.1,
             format="%.1f%%"
         )
     with col2:
         fx_shock = st.slider(
-            "💱 Ослабление рубля",
+            "💱 Ослабление рубля (%)",
             min_value=0.0, max_value=50.0, value=0.0, step=1.0,
             format="%.0f%%"
         )
@@ -366,7 +456,7 @@ elif page == "🔥 Стресс-тесты":
         st.metric("📉 Новая стоимость", f"{new_value:,.0f} ₽")
     
     st.markdown("---")
-    st.subheader("📈 Чувствительность к ставке")
+    st.subheader(" Чувствительность к ставке")
     
     rate_range = np.linspace(-5, 10, 100)
     losses = [current_value * (-duration * r / 100) for r in rate_range]
@@ -400,7 +490,7 @@ elif page == "🔥 Стресс-тесты":
         ("🟢 Умеренное снижение", -1.5, 0),
         ("⚪ Ставка без изменений", 0, 0),
         ("🟡 Небольшой рост", 1.0, 0),
-        ("🟠 Значительный рост", 2.0, 0),
+        (" Значительный рост", 2.0, 0),
         ("🔴 Кризис", 5.0, 20),
     ]
     
@@ -475,7 +565,7 @@ elif page == "🎯 Прогноз цели":
 
 # ==================== СИМУЛЯЦИЯ RGBI ====================
 
-elif page == "📈 Симуляция RGBI":
+elif page == " Симуляция RGBI":
     st.title("📊 Сравнение: RGBI vs Ваш портфель")
     
     months = st.slider("Период симуляции (месяцев)", 3, 60, 12)
@@ -508,7 +598,7 @@ elif page == "📈 Симуляция RGBI":
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric(" RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
+        st.metric("📈 RGBI", f"{rgbi_final:,.0f} ₽", f"{rgbi_return:+.2f}%")
     with col2:
         st.metric("💼 ОФЗ", f"{ofz_value:,.0f} ₽", f"{ofz_return:+.2f}%")
     with col3:
@@ -545,18 +635,18 @@ elif page == "📈 Симуляция RGBI":
 
 # ==================== О СИСТЕМЕ ====================
 
-elif page == "📱 О системе":
+elif page == " О системе":
     st.title("📱 О системе Mini-Aladdin")
     
     st.markdown("""
-    ###  Что это?
+    ### 🎯 Что это?
     **Mini-Aladdin** — это ваш персональный аналог профессиональной системы управления рисками 
     от BlackRock, адаптированный для Московской биржи.
     
     ### 💡 Возможности:
     - 📊 **Мониторинг портфеля** в реальном времени
     - 🔥 **Стресс-тесты** с интерактивными сценариями
-    -  **Прогноз достижения целей** с реинвестированием
+    - 🎯 **Прогноз достижения целей** с реинвестированием
     - 📈 **Сравнение с индексами** (RGBI)
     - 🎯 **DV01** — точный расчёт риска в рублях
     
@@ -570,7 +660,7 @@ elif page == "📱 О системе":
     
     **Android (Chrome):**
     1. Откройте в Chrome
-    2. Нажмите ⋮ (три точки) в правом верхнем углу
+    2. Нажмите  (три точки) в правом верхнем углу
     3. Выберите "Добавить на главный экран"
     4. Готово!
     
